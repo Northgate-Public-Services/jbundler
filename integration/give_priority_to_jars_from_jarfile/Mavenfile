@@ -1,0 +1,29 @@
+#-*- mode: ruby -*-
+
+packaging 'pom'
+
+jar 'org.jruby:jruby', '${jruby.version}'
+
+gemfile
+
+gem 'jbundler', '${jbundler.version}'
+
+gem 'bundler', '${bundler.version}'
+
+plugin( 'org.codehaus.mojo:exec-maven-plugin', '1.2', 
+        :executable => :java,
+        :environmentVariables => { 'GEM_HOME' => '${gem.home}',
+          'GEM_PATH' => '${gem.home}' },
+          # for travis
+          'BUNDLE_GEMFILE' => '${project.basedir}/Gemfile' ) do
+  execute_goal( :exec, :phase => :test,
+                :arguments => ['-classpath',
+                               xml('<classpath/>'),
+                               'org.jruby.Main',
+                               'test.rb' ] )
+end
+
+properties( 'gem.home' => '${project.basedir}/../rubygems',
+            'gem.path' => '${gem.home}' )
+
+# vim: syntax=Ruby

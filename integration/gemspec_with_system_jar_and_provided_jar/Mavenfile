@@ -1,0 +1,15 @@
+#-*- mode: ruby -*-
+
+id 'jbundler:gemspec_with_system_jar:0'
+
+packaging 'pom'
+
+#build do
+#  directory 'pkg'
+#end
+
+name 'aggregator'
+
+modules ['gem', 'verify']
+
+# vim: syntax=Ruby

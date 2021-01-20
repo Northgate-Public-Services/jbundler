@@ -1,0 +1,42 @@
+#-*- mode: ruby -*-
+
+packaging 'pom'
+
+gemfile
+
+gem 'jbundler', '${jbundler.version}'
+gem! 'bundler', '1.10.6'
+
+plugin( :dependency, '2.8' ) do
+  execute_goal( :unpack, :id => 'unpack jruby',
+                :phase => :'generate-test-resources',
+                :outputDirectory => '${project.basedir}/pkg',
+                :artifactItems => [ :artifactId => 'jruby-dist',
+                                    :groupId => 'org.jruby',
+                                    :version => '${jruby.version}',
+                                    :classifier => 'bin',
+                                    :type => 'tar.gz' ] )
+end
+
+plugin( 'org.codehaus.mojo:exec-maven-plugin', '1.2', 
+        :executable => '${project.basedir}/pkg/jruby-${jruby.version}/bin/jruby',
+        :environmentVariables => { 'GEM_HOME' => '${gem.home}',
+          'GEM_PATH' => '${gem_path}',
+          # for travis
+          'BUNDLE_GEMFILE' => '${project.basedir}/Gemfile',
+          'PATH' => '${project.basedir}/pkg/jruby-${jruby.version}/bin${path.separator}${gem.home}/bin${path.separator}${env.PATH}' } ) do
+  execute_goal( :exec, :id => 'jbundle install', :phase => :test,
+                :arguments => ['-S', 'jbundle', 'install' ] )
+  execute_goal( :exec, :id => 'rake', :phase => :test,
+                :arguments => ['-S', 'rake' ] )
+end
+
+build do
+  directory 'pkg'
+end
+
+properties( 'gem.home' => '${project.basedir}/pkg/rubygems',
+            # keep the _ to avoid using it with gem-maven-plugin
+            'gem_path' => '${gem.home}${path.separator}${gem.home}-test${path.separator}${gem.home}-provided' )
+
+# vim: syntax=Ruby
